@@ -3,131 +3,367 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FastAPI Chatbot</title>
+    <title>Coy Chatbot - A Dual Personality Chat Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-    />
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
       rel="stylesheet"
     />
     <style>
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
       body {
         font-family: 'Roboto', sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f0f0f0;
+        line-height: 1.6;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
       }
 
       .container {
-        max-width: 600px;
-        margin: 30px auto;
-        padding: 20px;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
         background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #eee;
+      }
+
+      .header h1 {
+        color: #2c3e50;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .header p {
+        color: #7f8c8d;
+      }
+
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .chat-container {
+        height: 500px;
+        overflow-y: auto;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #eee;
+        border-radius: 8px;
       }
 
       .message {
-        margin-bottom: 20px;
+        display: flex;
+        margin-bottom: 1rem;
+        animation: fadeIn 0.3s ease-in;
       }
 
-      .message p {
-        margin: 0;
-        padding: 10px;
-        background-color: #e0e0e0;
-        border-radius: 5px;
-        flex: 1;
+      .message.user {
+        justify-content: flex-end;
       }
 
-      .message.user p {
-        background-color: #4caf50;
-        color: #fff;
-        align-self: flex-end;
+      .message-content {
+        max-width: 70%;
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        position: relative;
       }
 
-      .message.bot p {
+      .message.user .message-content {
         background-color: #2196f3;
-        color: #fff;
+        color: white;
+        border-bottom-right-radius: 4px;
+      }
+
+      .message.bot1 .message-content {
+        background-color: #4caf50;
+        color: white;
+        border-bottom-left-radius: 4px;
+      }
+
+      .message.bot2 .message-content {
+        background-color: #ff9800;
+        color: white;
+        border-bottom-left-radius: 4px;
+      }
+
+      .message-meta {
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        color: #95a5a6;
       }
 
       .input-container {
         display: flex;
-        margin-top: 20px;
-        border-top: 1px solid #eee;
+        gap: 1rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
       }
 
       input[type="text"] {
         flex: 1;
-        padding: 10px;
+        padding: 0.8rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
         outline: none;
-        border: none;
-        border-radius: 5px 0 0 5px;
+        border-color: #2196f3;
       }
 
       button {
-        padding: 10px 20px;
+        padding: 0.8rem 1.5rem;
         background-color: #2196f3;
-        color: #fff;
+        color: white;
         border: none;
-        border-radius: 0 5px 5px 0;
+        border-radius: 6px;
+        font-weight: 500;
         cursor: pointer;
+        transition: background-color 0.3s ease;
       }
 
       button:hover {
-        background-color: #1e88e5;
+        background-color: #1976d2;
+      }
+
+      button:disabled {
+        background-color: #bdbdbd;
+        cursor: not-allowed;
+      }
+
+      .error {
+        padding: 1rem;
+        background-color: #ffebee;
+        color: #c62828;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+
+      .loading {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        color: #666;
+      }
+
+      .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #2196f3;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .bot-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div id="messages"></div>
+      <div class="header">
+        <h1>Coy Chatbot</h1>
+        <p>Chat with two unique personalities - Happy and Sassy!</p>
+      </div>
+      <div class="error" id="error"></div>
+      <div class="bot-controls">
+        <input
+          type="text"
+          id="topic"
+          placeholder="Enter a topic for bots to discuss..."
+          value="a random interesting topic"
+        />
+        <button id="startBotChat">Start Bot Chat</button>
+        <button id="stopBotChat" disabled>Stop Bot Chat</button>
+      </div>
+      <div class="chat-container" id="messages"></div>
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <span>Thinking...</span>
+      </div>
       <div class="input-container">
-        <input type="text" id="input" placeholder="Type your message..." />
+        <input
+          type="text"
+          id="input"
+          placeholder="Type your message..."
+          autocomplete="off"
+        />
         <button id="send">Send</button>
       </div>
     </div>
+
     <script>
       const messages = document.getElementById("messages");
       const input = document.getElementById("input");
       const sendButton = document.getElementById("send");
+      const errorDiv = document.getElementById("error");
+      const loadingDiv = document.getElementById("loading");
+      const topicInput = document.getElementById("topic");
+      const startBotChatButton = document.getElementById("startBotChat");
+      const stopBotChatButton = document.getElementById("stopBotChat");
 
-      sendButton.addEventListener("click", async () => {
+      let isProcessing = false;
+      let eventSource = null;
+
+      function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+      }
+
+      function setLoading(loading) {
+        isProcessing = loading;
+        loadingDiv.style.display = loading ? "flex" : "none";
+        input.disabled = loading;
+        sendButton.disabled = loading;
+      }
+
+      function addMessage(content, role, timestamp) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", role);
+        
+        const messageContent = document.createElement("div");
+        messageContent.classList.add("message-content");
+        messageContent.textContent = content;
+        
+        const messageMeta = document.createElement("div");
+        messageMeta.classList.add("message-meta");
+        messageMeta.textContent = new Date(timestamp).toLocaleTimeString();
+        
+        messageDiv.appendChild(messageContent);
+        messageContent.appendChild(messageMeta);
+        messages.appendChild(messageDiv);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      async function sendMessage() {
         const message = input.value.trim();
-        if (message) {
-          const response = await fetch(
-            "/chatbot?input_message=" + encodeURIComponent(message)
-          );
-          const output = await response.json();
-          const newMessage = document.createElement("div");
-          newMessage.classList.add("message");
-          if (output.role === "user") {
-            newMessage.classList.add("user");
-          } else {
-            newMessage.classList.add("bot");
-          }
-          newMessage.innerHTML = `<p>${output.content}</p>`;
-          messages.appendChild(newMessage);
-          messages.scrollTop = messages.scrollHeight;
+        if (!message || isProcessing) return;
+
+        try {
+          setLoading(true);
+          errorDiv.style.display = "none";
+
+          // Add user message
+          const timestamp = new Date().toISOString();
+          addMessage(message, "user", timestamp);
           input.value = "";
+
+          const response = await fetch("/chatbot", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: message,
+              role: "user"
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Failed to get response");
+          }
+
+          const data = await response.json();
+          
+          // Add bot responses
+          data.responses.forEach(response => {
+            addMessage(response.content, response.role, data.timestamp);
+          });
+
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          setLoading(false);
         }
-      });
-input.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
+      }
+
+      function startBotConversation() {
+        if (eventSource) {
+          eventSource.close();
+        }
+
+        const topic = topicInput.value.trim() || "a random interesting topic";
+        eventSource = new EventSource(`/bot-conversation?topic=${encodeURIComponent(topic)}`);
+        
+        startBotChatButton.disabled = true;
+        stopBotChatButton.disabled = false;
+        topicInput.disabled = true;
+
+        eventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          addMessage(data.content, data.role, data.timestamp);
+        };
+
+        eventSource.onerror = (error) => {
+          showError("Bot conversation ended or encountered an error");
+          stopBotConversation();
+        };
+      }
+
+      function stopBotConversation() {
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        
+        startBotChatButton.disabled = false;
+        stopBotChatButton.disabled = true;
+        topicInput.disabled = false;
+      }
+
+      sendButton.addEventListener("click", sendMessage);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
-          sendButton.click();
+          sendMessage();
         }
       });
+
+      startBotChatButton.addEventListener("click", startBotConversation);
+      stopBotChatButton.addEventListener("click", stopBotConversation);
+
+      // Focus input on page load
+      input.focus();
     </script>
   </body>
 </html>
